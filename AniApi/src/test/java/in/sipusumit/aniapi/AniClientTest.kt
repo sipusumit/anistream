@@ -1,7 +1,16 @@
 package `in`.sipusumit.aniapi
 
+import com.apollographql.apollo.ApolloClient
 import `in`.sipusumit.aniapi.model.AnimeId
+import `in`.sipusumit.aniapi.model.AnimeStatus
+import `in`.sipusumit.aniapi.model.AnimeSummary
+import `in`.sipusumit.aniapi.model.AnimeTitle
+import `in`.sipusumit.aniapi.model.AnimeType
+import `in`.sipusumit.aniapi.model.HomeEntry
+import `in`.sipusumit.aniapi.model.ImageSet
 import `in`.sipusumit.aniapi.source.allanime.AllAnimeSource
+import `in`.sipusumit.aniapi.source.allanime.graphql.HomePopularQuery
+import `in`.sipusumit.aniapi.source.allanime.graphql.type.VaildPopularTypeEnumType
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.Assert.assertTrue
@@ -68,4 +77,38 @@ class AniClientTest {
         println(res)
     }
 
+
+    @Test
+    fun apolloClientTest() = runTest {
+        val apolloClient = ApolloClient.Builder()
+        .serverUrl("https://api.allanime.day/api")
+        .addHttpHeader("Referer", "https://allanime.to")
+        .build()
+
+        val res = apolloClient.query(HomePopularQuery(
+            type = VaildPopularTypeEnumType.anime,
+            size = 20,
+            page = 1,
+            dateRange = 1,
+            allowAdult = true,
+            allowUnknown = false
+        )).execute().data
+        val entry = res?.queryPopular?.recommendations?.map {
+            it.anyCard?._id?.let { value ->
+                HomeEntry(
+                    AnimeSummary(
+                        id = AnimeId(value),
+                        title = AnimeTitle(it.anyCard.name ?: "", it.anyCard.englishName, it.anyCard.nativeName),
+                        poster = ImageSet(large = it.anyCard.thumbnail),
+                        type = AnimeType.TV,
+                        status = AnimeStatus.FINISHED,
+                    ),
+                    rank = 8,
+                    views = 22,
+                    trendingViews = 22
+                )
+            }
+        }
+        println(entry)
+    }
 }

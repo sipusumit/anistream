@@ -1,5 +1,18 @@
 plugins {
     alias(libs.plugins.android.library)
+    id("com.apollographql.apollo") version "4.4.1"
+}
+
+apollo {
+    service("AllAnime") {
+        packageName.set("in.sipusumit.aniapi.source.allanime.graphql")
+
+        introspection {
+            endpointUrl.set("https://api.allanime.day/api")
+            headers.put("Referer", "https://allanime.to")
+            schemaFile.set(file("src/main/graphql/schema.graphqls"))
+        }
+    }
 }
 
 android {
@@ -35,6 +48,7 @@ dependencies {
     implementation(libs.ktor.client.okhttp)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.apollo.runtime)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

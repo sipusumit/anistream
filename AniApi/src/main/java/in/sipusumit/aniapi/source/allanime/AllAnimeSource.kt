@@ -15,6 +15,8 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import kotlinx.serialization.json.*
 
+
+//TODO: Use Apollo Client
 class AllAnimeSource : AnimeSource {
 
     override val sourceId: String = "allanime"
@@ -22,11 +24,25 @@ class AllAnimeSource : AnimeSource {
 
     private val client = AllAnimeClient()
 
+//    private val apolloClient = ApolloClient.Builder()
+//        .serverUrl("https://api.allanime.day/api")
+//        .addHttpHeader("Referer", "https://allanime.to")
+//        .build()
+
     override suspend fun getHomeScreen(): Result<HomeSection> = runAnimeCatching(null){
         val json = client.getHomeScreen()
         println("Here")
 //        println(json)
         AllAnimeMapper.mapHomeScreenResults(json)
+
+//        apolloClient.query(HomePopularQuery(
+//            type = VaildPopularTypeEnumType.anime,
+//            size = 20,
+//            page = 1,
+//            dateRange = 1,
+//            allowAdult = true,
+//            allowUnknown = false
+//        )).execute().data.queryPopular.recommendations.mapNotNull { HomeEntry(AnimeSummary(it.anyCard._id!!, )) }
     }
 
     override suspend fun search(
@@ -42,34 +58,34 @@ class AllAnimeSource : AnimeSource {
         }
 
     override suspend fun getAnimeDetails(
-        animeId: AnimeId
+        id: AnimeId
     ): Result<AnimeDetails> =
-        runAnimeCatching(animeId.value) {
-            val json = client.getAnimeDetails(animeId.value)
+        runAnimeCatching(id.value) {
+            val json = client.getAnimeDetails(id.value)
             AllAnimeMapper.mapAnimeDetails(json)
         }
     override suspend fun getEpisodes(
-        animeId: AnimeId,
-        mode: LanguageMode
+        id: AnimeId,
+        language: LanguageMode
     ): Result<List<Episode>> =
-        runAnimeCatching(animeId.value) {
+        runAnimeCatching(id.value) {
             val json = client.getEpisodes(
-                animeId = animeId.value,
-                mode = mode.apiValue
+                animeId = id.value,
+                mode = language.apiValue
             )
-            AllAnimeMapper.mapEpisodes(json, mode)
+            AllAnimeMapper.mapEpisodes(json, language)
         }
     override suspend fun getStreams(
-        animeId: AnimeId,
+        id: AnimeId,
         episode: EpisodeNumber,
-        mode: LanguageMode
+        language: LanguageMode
     ): Result<List<Stream>> =
-        runAnimeCatching(animeId.value) {
+        runAnimeCatching(id.value) {
 
             val episodeData = client.getEpisodeSources(
-                animeId = animeId.value,
+                animeId = id.value,
                 episode = episode.value,
-                mode = mode.apiValue
+                mode = language.apiValue
             ) as JsonObject
             extractStreamsFromEpisode(episodeData["data"]?.jsonObject["episode"]?.jsonObject as JsonObject)
         }

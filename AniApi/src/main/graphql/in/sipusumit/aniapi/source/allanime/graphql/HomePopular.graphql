@@ -1,0 +1,32 @@
+query HomePopular(
+    $type: VaildPopularTypeEnumType!
+    $size: Int!
+    $page: Int!
+    $dateRange: Int!
+    $allowAdult: Boolean!
+    $allowUnknown: Boolean!
+) {
+    queryPopular(
+        type: $type
+        size: $size
+        page: $page
+        dateRange: $dateRange
+        allowAdult: $allowAdult
+        allowUnknown: $allowUnknown
+    ) {
+        total
+        recommendations {
+            anyCard {
+                _id
+                name
+                englishName
+                nativeName
+                thumbnail
+            }
+            pageStatus {
+                views
+                rangeViews
+            }
+        }
+    }
+}

@@ -1,5 +1,6 @@
 package `in`.sipusumit.aniapi.source.allanime
 
+import com.apollographql.apollo.ApolloClient
 import `in`.sipusumit.aniapi.network.HttpClientProvider
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -18,6 +19,7 @@ internal class AllAnimeClient {
 
     private val client = HttpClientProvider.client
 
+
     suspend fun getHomeScreen(): JsonElement{
         return client.get{
             url(AllAnimeEndpoints.API)
@@ -31,10 +33,10 @@ internal class AllAnimeClient {
                     """
                     {
                       "type":"anime",
-                      "size":20,
+                      "size":10,
                       "dateRange":1,
                       "page":1,
-                      "allowAdult":false,
+                      "allowAdult":true,
                       "allowUnknown":false
                     }
                     """.trimIndent()
