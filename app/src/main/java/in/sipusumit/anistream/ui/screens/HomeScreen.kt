@@ -26,6 +26,7 @@ import androidx.compose.material.icons.rounded.Cast
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -198,7 +199,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                             .clip(RoundedCornerShape(50))
                             .background(Slate900)
                             .border(1.dp, Slate800, RoundedCornerShape(50))
-                            .clickable { }
+                            .clickable { navController.navigate("search?query=${genre}") }
                             .padding(horizontal = 20.dp, vertical = 10.dp)
                     ) {
                         Text(genre, color = TextWhite, fontWeight = FontWeight.Medium)
@@ -222,13 +223,18 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
         // For simplicity in this snippet, we use items with a custom layout or a fixed height grid.
         // Or simply stick to a columnar list for recommendations to scroll naturally.
         when(state){
-            HomeUiState.Loading -> item { Text(
-                "Loading",
-                style = MaterialTheme.typography.titleSmall,
-                color = TextWhite,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = 24.dp, top = 32.dp, bottom = 16.dp)
-            ) }
+            HomeUiState.Loading -> item {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
+                    CircularProgressIndicator(color = Purple500)
+                }
+//                Text(
+//                "Loading",
+//                style = MaterialTheme.typography.titleSmall,
+//                color = TextWhite,
+//                fontWeight = FontWeight.Bold,
+//                modifier = Modifier.padding(start = 24.dp, top = 32.dp, bottom = 16.dp)
+//                )
+            }
 
             is HomeUiState.Error -> item { Text(
                 "Error",
@@ -237,7 +243,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(start = 24.dp, top = 32.dp, bottom = 16.dp)
             ) }
-            is HomeUiState.Success -> items((state as HomeUiState.Success).section.entries.take(10)) { entry ->
+            is HomeUiState.Success -> items((state as HomeUiState.Success).section.entries) { entry ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -258,7 +264,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                     )
                     Column(modifier = Modifier.padding(start = 16.dp).weight(1f)) {
                         Text(
-                            entry.anime.title.primary,
+                            entry.anime.title.english ?: entry.anime.title.primary,
 //                            anime.title,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,

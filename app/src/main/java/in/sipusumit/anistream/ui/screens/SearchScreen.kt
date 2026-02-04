@@ -77,7 +77,7 @@ fun SearchScreen(navController: NavController, viewModel: SearchViewModel) {
 
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    var query by remember { mutableStateOf("") }
+    val query by viewModel.query.collectAsStateWithLifecycle()
     val focusManager = LocalFocusManager.current
     val recentSearches = listOf<String>()
 
@@ -107,7 +107,7 @@ fun SearchScreen(navController: NavController, viewModel: SearchViewModel) {
         ) {
             TextField(
                 value = query,
-                onValueChange = { query = it },
+                onValueChange = viewModel::onQueryChange,
                 modifier = Modifier
                     .weight(1f)
                     .clip(RoundedCornerShape(16.dp))
@@ -122,7 +122,7 @@ fun SearchScreen(navController: NavController, viewModel: SearchViewModel) {
                 },
                 trailingIcon = {
                     if (query.isNotEmpty()) {
-                        IconButton(onClick = { query = "" ; viewModel.clear()}) {
+                        IconButton(onClick = viewModel::clear) {
                             Icon(Icons.Rounded.Close, contentDescription = "Clear", tint = TextGrey)
                         }
                     }
@@ -173,7 +173,7 @@ fun SearchScreen(navController: NavController, viewModel: SearchViewModel) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { query = search }
+                                    .clickable { viewModel.onQueryChange(search) }
                                     .padding(horizontal = 24.dp, vertical = 12.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -211,7 +211,7 @@ fun SearchScreen(navController: NavController, viewModel: SearchViewModel) {
                             ) {
                                 items(genres) { genre ->
                                     SuggestionChip(
-                                        onClick = { query = genre },
+                                        onClick = { viewModel.onQueryChange(genre) },
                                         label = { Text(genre, color = TextWhite) },
                                         colors = SuggestionChipDefaults.suggestionChipColors(
                                             containerColor = Slate900
@@ -290,11 +290,11 @@ fun SearchScreen(navController: NavController, viewModel: SearchViewModel) {
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    anime.title.primary,
+                                    anime.title.english ?: anime.title.primary,
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = TextWhite,
-                                    maxLines = 1,
+                                    maxLines = 3,
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Text(

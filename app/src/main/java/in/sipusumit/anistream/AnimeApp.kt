@@ -2,23 +2,19 @@ package `in`.sipusumit.anistream
 
 import android.util.Log
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Icon
@@ -51,7 +47,6 @@ import `in`.sipusumit.aniapi.model.AnimeId
 import `in`.sipusumit.aniapi.model.EpisodeNumber
 import `in`.sipusumit.anistream.ui.theme.Pink500
 import `in`.sipusumit.anistream.ui.theme.Purple500
-import `in`.sipusumit.anistream.ui.theme.Purple600
 import `in`.sipusumit.anistream.ui.theme.Slate800
 import `in`.sipusumit.anistream.ui.theme.Slate950
 import `in`.sipusumit.anistream.ui.theme.TextGrey
@@ -84,8 +79,6 @@ fun AnimeApp() {
     val context = LocalContext.current
     val app = context.applicationContext as AniStreamApp
     val homeScreenViewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory(app.animeSource))
-    val searchScreenViewModel: SearchViewModel = viewModel(factory = SearchViewModelFactory(app.animeSource))
-
     Row(modifier = Modifier.fillMaxSize().background(Slate950)) {
 
         // Desktop/Tablet Sidebar (Visible only on wide screens and NOT in player)
@@ -150,17 +143,17 @@ fun AnimeApp() {
                             colors = NavigationBarItemDefaults.colors(unselectedIconColor = TextGrey, unselectedTextColor = TextGrey)
                         )
                         // Floating Action Button Style in Middle
-                        Box(modifier = Modifier.offset(y = (-10).dp)) {
-                            Box(modifier = Modifier
-                                .size(50.dp)
-                                .clip(CircleShape)
-                                .background(Brush.linearGradient(listOf(Purple600, Pink500)))
-                                .clickable { },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(Icons.Rounded.PlayArrow, "Play", tint = Color.White)
-                            }
-                        }
+//                        Box(modifier = Modifier.offset(y = (-10).dp)) {
+//                            Box(modifier = Modifier
+//                                .size(50.dp)
+//                                .clip(CircleShape)
+//                                .background(Brush.linearGradient(listOf(Purple600, Pink500)))
+//                                .clickable { },
+//                                contentAlignment = Alignment.Center
+//                            ) {
+//                                Icon(Icons.Rounded.PlayArrow, "Play", tint = Color.White)
+//                            }
+//                        }
                         NavigationBarItem(
                             selected = false,
                             onClick = { },
@@ -185,7 +178,14 @@ fun AnimeApp() {
                 modifier = Modifier.padding(innerPadding)
             ) {
                 composable("home") { HomeScreen(navController, homeScreenViewModel) }
-                composable("search") { SearchScreen(navController, searchScreenViewModel) }
+                composable("search?query={query}") { backStackEntry ->
+                    val query = backStackEntry.arguments?.getString("query")
+                    val searchScreenViewModel: SearchViewModel = viewModel(
+                        backStackEntry,
+                        factory = SearchViewModelFactory(app.animeSource, query)
+                    )
+                    SearchScreen(navController, searchScreenViewModel)
+                }
                 composable("details/{animeId}") { backStackEntry ->
                     val animeId = backStackEntry.arguments?.getString("animeId") ?: error("Should not happen")
 //                    val anime = trendingAnime.find { it.id == animeId } ?: trendingAnime[0]

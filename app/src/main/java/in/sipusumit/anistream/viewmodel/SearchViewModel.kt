@@ -17,12 +17,24 @@ sealed interface SearchUiState{
     data class Error(val message: String) : SearchUiState
 }
 
-class SearchViewModel(private val source: AnimeSource) : ViewModel() {
+class SearchViewModel(private val source: AnimeSource, private val initialQuery: String?) : ViewModel() {
     private val _state = MutableStateFlow<SearchUiState>(SearchUiState.Idle)
     val state: StateFlow<SearchUiState> = _state
 
+    private val _query = MutableStateFlow(initialQuery ?: "")
+    val query: StateFlow<String> = _query // or _query.asStateFlow()
+
+    fun onQueryChange(newQuery: String) {
+//        if(newQuery != _query.value){
+        _query.value = newQuery
+//        }
+        // You can move the debounce logic here using Flow operators
+        // or keep the LaunchedEffect in the UI observing this flow.
+    }
+
     fun clear(){
         _state.value = SearchUiState.Idle;
+        _query.value = ""
     }
 
     fun search(query: String){

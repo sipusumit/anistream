@@ -22,7 +22,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -65,7 +64,6 @@ import `in`.sipusumit.anistream.viewmodel.DetailsViewModel
 // --- DETAILS SCREEN ---
 @Composable
 fun DetailsScreen(navController: NavController, viewModel: DetailsViewModel) {
-    val scrollState = rememberScrollState()
     val state by viewModel.state.collectAsStateWithLifecycle()
     when(state){
         DetailsUiState.Loading -> {
@@ -296,7 +294,7 @@ private fun DetailsUi(navController: NavController, anime: AnimeDetails, epList:
                         modifier = Modifier.align(Alignment.BottomStart).padding(24.dp)
                     ) {
                         Text(
-                            anime.title.primary,
+                            anime.title.english ?: anime.title.primary,
                             style = MaterialTheme.typography.displaySmall,
                             fontWeight = FontWeight.Black,
                             color = TextWhite,
@@ -331,7 +329,7 @@ private fun DetailsUi(navController: NavController, anime: AnimeDetails, epList:
                         ) {
                             Icon(Icons.Rounded.PlayArrow, null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Play S1 E1")
+                            Text("Play E1")
                         }
                         Spacer(modifier = Modifier.width(16.dp))
                         OutlinedButton(
