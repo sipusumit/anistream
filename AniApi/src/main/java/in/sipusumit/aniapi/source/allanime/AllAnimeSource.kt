@@ -71,7 +71,7 @@ class AllAnimeSource : AnimeSource {
         runAnimeCatching(id.value) {
             val json = client.getEpisodes(
                 animeId = id.value,
-                mode = language.apiValue
+//                mode = language.apiValue
             )
             AllAnimeMapper.mapEpisodes(json, language)
         }

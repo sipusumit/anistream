@@ -1,6 +1,7 @@
 package `in`.sipusumit.aniapi
 
 import com.apollographql.apollo.ApolloClient
+import com.apollographql.apollo.api.Optional
 import `in`.sipusumit.aniapi.model.AnimeId
 import `in`.sipusumit.aniapi.model.AnimeStatus
 import `in`.sipusumit.aniapi.model.AnimeSummary
@@ -10,7 +11,11 @@ import `in`.sipusumit.aniapi.model.HomeEntry
 import `in`.sipusumit.aniapi.model.ImageSet
 import `in`.sipusumit.aniapi.source.allanime.AllAnimeSource
 import `in`.sipusumit.aniapi.source.allanime.graphql.HomePopularQuery
+import `in`.sipusumit.aniapi.source.allanime.graphql.HomeRecommendationQuery
+import `in`.sipusumit.aniapi.source.allanime.graphql.type.QueryPageInput
 import `in`.sipusumit.aniapi.source.allanime.graphql.type.VaildPopularTypeEnumType
+import `in`.sipusumit.aniapi.source.allanime.graphql.type.VaildRecommendationEnumType
+import `in`.sipusumit.aniapi.source.allanime.graphql.type.VaildTranslationTypeEnumType
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.Assert.assertTrue
@@ -102,6 +107,8 @@ class AniClientTest {
                         poster = ImageSet(large = it.anyCard.thumbnail),
                         type = AnimeType.TV,
                         status = AnimeStatus.FINISHED,
+                        score = it.anyCard.score?.toFloat(),
+//                        episodeCount = it.anyCard.availableEpisodes.
                     ),
                     rank = 8,
                     views = 22,
@@ -110,5 +117,55 @@ class AniClientTest {
             }
         }
         println(entry)
+//        println(res?.queryPopular?.recommendations?.first()?.anyCard?.availableEpisodes)
+    }
+
+    @Test
+    fun apolloClientRecommendationTest() = runTest {
+        val apolloClient = ApolloClient.Builder()
+            .serverUrl("https://api.allanime.day/api")
+            .addHttpHeader("Referer", "https://allanime.to")
+            .build()
+
+        val res = apolloClient.query(HomeRecommendationQuery(
+            QueryPageInput(
+                type = VaildPopularTypeEnumType.anime,
+                size = Optional.Present(10),
+                page = Optional.Present(1),
+                allowAdult = Optional.Present(true),
+                allowUnknown = Optional.Present(false),
+                allowSameShow = Optional.Present(false),
+                excludedShowIds = Optional.Present(emptyList()),
+                showId = Optional.Present(""),
+                episodeId = Optional.Present(""),
+                translationType =  Optional.Present(VaildTranslationTypeEnumType.sub),
+//                userId = Optional.Present(emptyList()),
+                isAdult = Optional.Present(false),
+                denyEcchi = Optional.Present(false),
+                dateAgo = Optional.Present(1),
+                pageId = Optional.Present(""),
+                pageType = Optional.Present(VaildRecommendationEnumType.anime_manga)
+            )
+        )).execute().data
+        val entry = res?.queryRecommendation?.recommendations?.map {
+            it.anyCard?._id?.let { value ->
+                HomeEntry(
+                    AnimeSummary(
+                        id = AnimeId(value),
+                        title = AnimeTitle(it.anyCard.name ?: "", it.anyCard.englishName, it.anyCard.nativeName),
+                        poster = ImageSet(large = it.anyCard.thumbnail),
+                        type = AnimeType.TV,
+                        status = AnimeStatus.FINISHED,
+                        score = it.anyCard.score?.toFloat(),
+//                        episodeCount = it.anyCard.availableEpisodes.
+                    ),
+                    rank = 8,
+                    views = 22,
+                    trendingViews = 22
+                )
+            }
+        }
+        println(res)
+//        println(res?.queryPopular?.recommendations?.first()?.anyCard?.availableEpisodes)
     }
 }

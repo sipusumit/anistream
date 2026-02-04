@@ -22,10 +22,10 @@ query HomePopular(
                 englishName
                 nativeName
                 thumbnail
-            }
-            pageStatus {
-                views
-                rangeViews
+                airedStart
+                airedEnd
+                availableEpisodes
+                score
             }
         }
     }

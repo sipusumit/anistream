@@ -1,6 +1,5 @@
 package `in`.sipusumit.aniapi.source.allanime
 
-import com.apollographql.apollo.ApolloClient
 import `in`.sipusumit.aniapi.network.HttpClientProvider
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -162,7 +161,7 @@ internal class AllAnimeClient {
 
     suspend fun getEpisodes(
         animeId: String,
-        mode: String
+//        mode: String
     ): JsonElement {
 
         val gql = """
