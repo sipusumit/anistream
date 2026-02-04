@@ -17,7 +17,7 @@ sealed interface SearchUiState{
     data class Error(val message: String) : SearchUiState
 }
 
-class SearchViewModel(private val source: AnimeSource, private val initialQuery: String?) : ViewModel() {
+class SearchViewModel(private val source: AnimeSource, initialQuery: String?) : ViewModel() {
     private val _state = MutableStateFlow<SearchUiState>(SearchUiState.Idle)
     val state: StateFlow<SearchUiState> = _state
 
@@ -33,7 +33,7 @@ class SearchViewModel(private val source: AnimeSource, private val initialQuery:
     }
 
     fun clear(){
-        _state.value = SearchUiState.Idle;
+        _state.value = SearchUiState.Idle
         _query.value = ""
     }
 
