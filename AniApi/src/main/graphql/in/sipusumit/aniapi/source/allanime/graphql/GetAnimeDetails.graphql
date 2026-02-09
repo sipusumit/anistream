@@ -1,0 +1,50 @@
+query GetAnimeDetails(
+    $ids: [String!]!
+){
+    showsWithIds(ids: $ids) {
+        _id
+        name
+        englishName
+        nativeName
+        malId
+        status
+        altNames
+        thumbnail
+        score
+        type
+        availableEpisodes
+        availableEpisodesDetail
+        pageStatus {
+            views
+            rangeViews
+        }
+    }
+}
+
+query GetAnimeDetail(
+    $id: String!
+){
+    show(_id: $id) {
+        _id
+        name
+        englishName
+        nativeName
+        malId
+        status
+        altNames
+        thumbnail
+        banner
+        score
+        rating
+        type
+        availableEpisodes
+        availableEpisodesDetail
+        season
+        description
+        studios
+        pageStatus {
+            views
+            rangeViews
+        }
+    }
+}

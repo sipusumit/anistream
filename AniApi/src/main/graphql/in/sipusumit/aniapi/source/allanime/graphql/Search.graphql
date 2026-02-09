@@ -1,0 +1,7 @@
+query Search($search: SearchInput, $page: Int, $offset: Int, $limit: Int, $translationType: VaildTranslationTypeEnumType, $countryOrigin: VaildCountryOriginEnumType, $queryAt: String){
+    shows(search: $search, page: $page, offset: $offset, limit: $limit, translationType: $translationType, countryOrigin: $countryOrigin, queryAt: $queryAt){
+        edges {
+            _id
+        }
+    }
+}

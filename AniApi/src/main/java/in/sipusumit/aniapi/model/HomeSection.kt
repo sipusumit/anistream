@@ -1,7 +1,14 @@
 package `in`.sipusumit.aniapi.model
 
 data class HomeSection(
-    val title: String,
+    val type: HomeSectionType,
     val entries: List<HomeEntry>,
     val total: Int
 )
+
+enum class HomeSectionType {
+    CAROUSEL,
+    TRENDING,
+
+    UNKNOWN
+}

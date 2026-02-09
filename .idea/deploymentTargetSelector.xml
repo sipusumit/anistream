@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-02-03T15:42:30.107541698Z">
+        <DropdownSelection timestamp="2026-02-04T13:42:21.212594486Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=RZCX20VR5GP" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=/home/sipu/.android/avd/Pixel_6a.avd" />
             </handle>
           </Target>
         </DropdownSelection>

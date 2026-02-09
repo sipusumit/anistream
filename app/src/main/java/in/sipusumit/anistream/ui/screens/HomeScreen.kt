@@ -237,7 +237,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
             }
 
             is HomeUiState.Error -> item { Text(
-                "Error",
+                "Error ${(state as HomeUiState.Error).message}",
                 style = MaterialTheme.typography.titleSmall,
                 color = TextWhite,
                 fontWeight = FontWeight.Bold,

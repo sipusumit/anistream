@@ -37,6 +37,9 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -304,12 +308,12 @@ private fun DetailsUi(navController: NavController, anime: AnimeDetails, epList:
                             modifier = Modifier.padding(top = 8.dp, start = 24.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("98% Match", color = Color(0xFF4ADE80), fontWeight = FontWeight.Bold)
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text("2024", color = TextGrey)
+//                            Text("98% Match", color = Color(0xFF4ADE80), fontWeight = FontWeight.Bold)
+//                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(anime.season?.year.toString(), color = TextGrey)
                             Spacer(modifier = Modifier.width(12.dp))
                             Box(modifier = Modifier.border(1.dp, TextGrey, RoundedCornerShape(4.dp)).padding(horizontal = 4.dp)) {
-                                Text("16+", color = TextGrey, fontSize = 12.sp)
+                                Text(anime.rating?.name.toString(), color = TextGrey, fontSize = 12.sp)
                             }
                         }
                     }
@@ -344,11 +348,16 @@ private fun DetailsUi(navController: NavController, anime: AnimeDetails, epList:
                     }
 
                     // Description
-                    Text(
+//                    Text(
+//                        anime.description,
+//                        color = TextGrey,
+//                        modifier = Modifier.padding(vertical = 24.dp),
+//                        lineHeight = 24.sp,
+//                    )
+
+                    CollapsibleTextWithToggle(
                         anime.description,
-                        color = TextGrey,
-                        modifier = Modifier.padding(vertical = 24.dp),
-                        lineHeight = 24.sp
+                        modifier = Modifier.padding(vertical = 24.dp)
                     )
 
                     // Episodes Title
@@ -386,5 +395,33 @@ private fun DetailsUi(navController: NavController, anime: AnimeDetails, epList:
         ) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = TextWhite)
         }
+    }
+}
+
+@Composable
+fun CollapsibleTextWithToggle(
+    text: String,
+    modifier: Modifier = Modifier,
+    color: Color = TextGrey,
+    collapsedMaxLines: Int = 3
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Column(modifier = modifier) {
+        Text(
+            text = text,
+            color = color,
+            maxLines = if (expanded) Int.MAX_VALUE else collapsedMaxLines,
+            overflow = TextOverflow.Ellipsis,
+            lineHeight = 24.sp
+        )
+
+        Text(
+            text = if (expanded) "Read less" else "Read more",
+            color = Purple600,
+            modifier = Modifier
+                .padding(top = 4.dp)
+                .clickable { expanded = !expanded }
+        )
     }
 }

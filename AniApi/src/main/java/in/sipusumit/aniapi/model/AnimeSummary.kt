@@ -26,5 +26,8 @@ data class AnimeSummary(
     val score: Float? = null,
 
     /** Episode count if known */
-    val episodeCount: EpisodeCount? = null
+    val episodeCount: EpisodeCount? = null,
+
+    /** MAL Id if known */
+    val malId: Long? = null
 )

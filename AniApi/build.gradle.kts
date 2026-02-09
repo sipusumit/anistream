@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.serialization)
     id("com.apollographql.apollo") version "4.4.1"
 }
 
@@ -7,6 +8,11 @@ apollo {
     service("AllAnime") {
         packageName.set("in.sipusumit.aniapi.source.allanime.graphql")
 
+        mapScalarToKotlinLong("BigInt")
+        mapScalar(
+            "Object",
+            "kotlinx.serialization.json.JsonElement"
+        )
         introspection {
             endpointUrl.set("https://api.allanime.day/api")
             headers.put("Referer", "https://allanime.to")
@@ -48,6 +54,7 @@ dependencies {
     implementation(libs.ktor.client.okhttp)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.kotlinx.serialization.json)
     implementation(libs.apollo.runtime)
 
     implementation(libs.androidx.core.ktx)

@@ -54,7 +54,9 @@ import `in`.sipusumit.anistream.ui.theme.TextWhite
 import `in`.sipusumit.anistream.ui.components.NavRailItem
 import `in`.sipusumit.anistream.ui.screens.DetailsScreen
 import `in`.sipusumit.anistream.ui.screens.HomeScreen
+import `in`.sipusumit.anistream.ui.screens.ListScreen
 import `in`.sipusumit.anistream.ui.screens.PlayerScreen
+import `in`.sipusumit.anistream.ui.screens.ProfileScreen
 import `in`.sipusumit.anistream.ui.screens.SearchScreen
 import `in`.sipusumit.anistream.viewmodel.DetailsViewModel
 import `in`.sipusumit.anistream.viewmodel.DetailsViewModelFactory
@@ -136,7 +138,7 @@ fun AnimeApp() {
                             )
                         )
                         NavigationBarItem(
-                            selected = currentRoute == "search",
+                            selected = currentRoute?.contains("search") ?: false,
                             onClick = { navController.navigate("search") },
                             icon = { Icon(Icons.Rounded.Search, contentDescription = "Search") },
                             label = { Text("Search") },
@@ -155,15 +157,15 @@ fun AnimeApp() {
 //                            }
 //                        }
                         NavigationBarItem(
-                            selected = false,
-                            onClick = { },
+                            selected = currentRoute == "myList",
+                            onClick = { navController.navigate("myList")},
                             icon = { Icon(Icons.Filled.FavoriteBorder, contentDescription = "List") },
-                            label = { Text("List") },
+                            label = { Text("My List") },
                             colors = NavigationBarItemDefaults.colors(unselectedIconColor = TextGrey, unselectedTextColor = TextGrey)
                         )
                         NavigationBarItem(
-                            selected = false,
-                            onClick = { },
+                            selected = currentRoute == "profile",
+                            onClick = { navController.navigate("profile")},
                             icon = { Icon(Icons.Filled.Person, contentDescription = "Profile") },
                             label = { Text("Profile") },
                             colors = NavigationBarItemDefaults.colors(unselectedIconColor = TextGrey, unselectedTextColor = TextGrey)
@@ -217,6 +219,12 @@ fun AnimeApp() {
                     )
 
                     PlayerScreen(navController, viewModel)
+                }
+                composable("myList") {
+                    ListScreen(navController)
+                }
+                composable("profile") {
+                    ProfileScreen(navController)
                 }
             }
         }

@@ -575,6 +575,8 @@ type AnyCard {
   firstCharacters: [String]
 
   slugTime: BigInt
+
+  format: String
 }
 
 enum VaildTranslationTypeEnumType {
@@ -1945,6 +1947,8 @@ type SyncListJob {
   status: BigInt
 
   results: Object
+
+  sType: String
 }
 
 type Mutation {
@@ -2029,6 +2033,8 @@ type Mutation {
   toggleAppsAccessbility("" type: String!, "" value: String): AppSettings!
 
   importMyList("" file: Upload!, "" listType: VaildSyncTypeEnumType!, "" listSource: String): SyncListResponse
+
+  exportMyList("" listType: VaildSyncTypeEnumType!): SyncListResponse
 }
 
 input CreateUserInput {

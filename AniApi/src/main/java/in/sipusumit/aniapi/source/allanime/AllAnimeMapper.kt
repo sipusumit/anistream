@@ -67,7 +67,7 @@ internal object AllAnimeMapper {
             type = parseType(show["type"]),
             status = parseStatus(show["status"]),
             rating = parseRating(show["rating"]),
-            score = show["score"]?.jsonPrimitive?.intOrNull,
+            score = show["score"]?.jsonPrimitive?.floatOrNull,
             season = parseSeason(show["season"]),
             studio = show["studios"]?.jsonArray
                 ?.firstOrNull()
@@ -112,7 +112,8 @@ internal object AllAnimeMapper {
         val obj = el?.jsonObject ?: return null
         return EpisodeCount(
             sub = obj["sub"]?.jsonPrimitive?.intOrNull,
-            dub = obj["dub"]?.jsonPrimitive?.intOrNull
+            dub = obj["dub"]?.jsonPrimitive?.intOrNull,
+            raw = obj["raw"]?.jsonPrimitive?.intOrNull
         )
     }
     private fun parseType(el: JsonElement?): AnimeType =
@@ -155,7 +156,7 @@ internal object AllAnimeMapper {
     }
 
     fun mapHomeScreenResults(el: JsonElement?): HomeSection {
-        val obj = el?.jsonObject ?: return HomeSection("", emptyList(), 0)
+        val obj = el?.jsonObject ?: return HomeSection(HomeSectionType.UNKNOWN, emptyList(), 0)
         return mapPopularSection(obj)
     }
 
@@ -180,7 +181,7 @@ internal object AllAnimeMapper {
         }
 
         return HomeSection(
-            title = "Popular Anime",
+            type = HomeSectionType.TRENDING,
             entries = entries,
             total = total
         )

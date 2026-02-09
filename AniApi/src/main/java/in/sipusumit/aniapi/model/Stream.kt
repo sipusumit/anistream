@@ -6,6 +6,8 @@ package `in`.sipusumit.aniapi.model
  * This is intentionally minimal and player-friendly.
  */
 data class Stream(
+    /** Name of Provider*/
+    val provider: String?,
 
     /** Direct playable URL (m3u8 / mp4) */
     val url: String,

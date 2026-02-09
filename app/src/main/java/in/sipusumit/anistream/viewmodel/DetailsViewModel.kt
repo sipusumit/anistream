@@ -1,5 +1,6 @@
 package `in`.sipusumit.anistream.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import `in`.sipusumit.aniapi.core.AnimeError
@@ -41,10 +42,12 @@ class DetailsViewModel(
                             _state.value = DetailsUiState.Success(DetailsAndCount(details, eps))
                         }
                         .onFailure {
+                            Log.e("ANI", "Failed to load details", it)
                             _state.value = DetailsUiState.Success(DetailsAndCount(details, emptyList()))
                         }
                 }
                 .onFailure {
+                    Log.e("ANI", "Failed to load details", it)
                     _state.value = DetailsUiState.Error(
                         (it as? AnimeError)?.userMessage() ?: "Failed to load"
                     )

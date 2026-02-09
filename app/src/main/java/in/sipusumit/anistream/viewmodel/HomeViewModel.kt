@@ -1,5 +1,6 @@
 package `in`.sipusumit.anistream.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import `in`.sipusumit.aniapi.core.AnimeException
@@ -31,6 +32,7 @@ class HomeViewModel(private val source: AnimeSource) : ViewModel() {
                     _state.value = HomeUiState.Success(it)
                 }
                 .onFailure {
+                    Log.e("ANI", "Failed to load home", it)
                     _state.value = HomeUiState.Error(
                         (it as? AnimeException)?.error?.userMessage()
                             ?: "Something went wrong"

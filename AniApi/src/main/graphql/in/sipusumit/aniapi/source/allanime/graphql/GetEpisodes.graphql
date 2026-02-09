@@ -1,0 +1,5 @@
+query GetEpisodes($id: String!){
+    show(_id: $id){
+        availableEpisodesDetail
+    }
+}

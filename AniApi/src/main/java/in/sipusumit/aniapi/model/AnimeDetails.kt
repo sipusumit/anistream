@@ -32,7 +32,7 @@ data class AnimeDetails(
     val rating: ContentRating? = null,
 
     /** Average score (0–100 or 0–10 depending on source) */
-    val score: Int? = null,
+    val score: Float? = null,
 
     /** Release season */
     val season: Season? = null,

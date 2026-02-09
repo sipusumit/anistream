@@ -1,4 +1,4 @@
-query HomePopular(
+query HomePopularIds(
     $type: VaildPopularTypeEnumType!
     $size: Int!
     $page: Int!
@@ -14,18 +14,38 @@ query HomePopular(
         allowAdult: $allowAdult
         allowUnknown: $allowUnknown
     ) {
+        recommendations {
+            anyCard {
+                _id
+            }
+        }
+    }
+}
+
+#{
+#"pageSearch": {
+#"type": "anime",
+#"size": 10,
+#"page": 1,
+#"allowAdult": false,
+#"allowUnknown": false
+#}
+#}
+query HomeTrending($pageSearch: queryPageInput!) {
+    queryLatestPageStatus(pageSearch: $pageSearch) {
         total
         recommendations {
             anyCard {
                 _id
                 name
                 englishName
-                nativeName
                 thumbnail
-                airedStart
-                airedEnd
                 availableEpisodes
                 score
+            }
+            pageStatus {
+                views
+                rangeViews
             }
         }
     }
