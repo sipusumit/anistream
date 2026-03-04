@@ -7,6 +7,9 @@ import `in`.sipusumit.aniapi.model.AnimeId
 import `in`.sipusumit.aniapi.model.Episode
 import `in`.sipusumit.aniapi.model.EpisodeNumber
 import `in`.sipusumit.aniapi.model.Stream
+import `in`.sipusumit.anistream.data.local.HistoryDao
+import `in`.sipusumit.anistream.data.local.WatchHistory
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,7 +30,8 @@ sealed interface PlayerUiState {
     data class Ready(
         val streams: List<Stream>,
         val current: PlayingEpisode,
-        val hasNext: Boolean
+        val hasNext: Boolean,
+        val startPosition: Long = 0L
     ) : PlayerUiState
     data class Error(val message: String) : PlayerUiState
 }
@@ -40,7 +44,8 @@ data class PlayingEpisode(
 class PlayerViewModel(
     private val source: AnimeSource,
     private val animeId: AnimeId,
-    private val episode: EpisodeNumber
+    private val episode: EpisodeNumber,
+    private val historyDao: HistoryDao
 ): ViewModel() {
     private val _query = MutableStateFlow("")
     val query = _query.asStateFlow()
@@ -51,8 +56,18 @@ class PlayerViewModel(
     private val _uiState = MutableStateFlow<PlayerUiState>(PlayerUiState.Loading)
     val uiState: StateFlow<PlayerUiState> = _uiState
 
-    private val _downloadUrl = MutableSharedFlow<String>()
+    private val _downloadUrl = MutableSharedFlow<Pair<String, String>>()
     val downloadUrl = _downloadUrl.asSharedFlow()
+
+    private val _currentStream = MutableStateFlow<Stream?>(null)
+    val currentStream: StateFlow<Stream?> = _currentStream.asStateFlow()
+
+    private val _episodeList = MutableStateFlow<List<Episode>>(emptyList())
+    val episodeList: StateFlow<List<Episode>> = _episodeList.asStateFlow()
+
+    fun onStreamSelected(stream: Stream) {
+        _currentStream.value = stream
+    }
 
     init {
         viewModelScope.launch {
@@ -105,12 +120,18 @@ class PlayerViewModel(
         viewModelScope.launch {
             _uiState.value = PlayerUiState.Loading
 
+            // Fetch history in parallel with streams
+            val historyJob = async { historyDao.getHistory(animeId.value, episode.value) }
+            val streamsResult = source.getStreams(animeId, episode)
+            val history = historyJob.await()
+
             source.getStreams(animeId, episode)
                 .onSuccess { streams ->
                     _uiState.value = PlayerUiState.Ready(
                         streams = streams,
                         current = PlayingEpisode(animeId, episode),
-                        hasNext = episode.value.toFloat() < episodes.value.size
+                        hasNext = episode.value.toFloat() < episodes.value.size,
+                        startPosition = history?.position ?: 0L
                     )
                 }
                 .onFailure {
@@ -119,12 +140,33 @@ class PlayerViewModel(
         }
     }
 
+    fun onProgressChange(position: Long, duration: Long) {
+        val state = _uiState.value as? PlayerUiState.Ready ?: return
+
+        // Debounce: Only save if significant progress or periodically
+        // For simplicity, launch a coroutine. In production, use a debouncer.
+        viewModelScope.launch {
+            historyDao.saveHistory(
+                WatchHistory(
+                    animeId = state.current.animeId.value,
+                    episodeNumber = state.current.episode.value,
+                    position = position,
+                    duration = duration
+                )
+            )
+        }
+    }
+
     fun downloadEpisode(episodeNumber: EpisodeNumber){
         viewModelScope.launch {
             source.getStreams(animeId, episode).onSuccess { streams ->
                 // pick best stream (you decide logic)
-                val streamUrl = streams.first().url
-                _downloadUrl.emit(streamUrl)
+                source.getAnimeDetails(animeId).onSuccess {
+//                    val stream = streams.first()
+                    val streamUrl = streams.first().url
+                    val fileName = "${it.title.english?: it.title.primary}_Ep${episodeNumber.value}.mp4"
+                    _downloadUrl.emit(Pair(fileName, streamUrl))
+                }
             }
         }
     }

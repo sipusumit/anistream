@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -68,6 +69,7 @@ import `in`.sipusumit.anistream.viewmodel.HomeViewModel
 fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
 
     val state by viewModel.state.collectAsState()
+    val continueWatching by viewModel.continueWatching.collectAsState()
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.screenWidthDp > 600
@@ -174,6 +176,101 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                             colors = IconButtonDefaults.filledIconButtonColors(containerColor = Slate800.copy(alpha = 0.8f))
                         ) {
                             Icon(Icons.Filled.FavoriteBorder, null, tint = TextWhite)
+                        }
+                    }
+                }
+            }
+        }
+
+        // --- NEW: CONTINUE WATCHING SECTION ---
+        if (continueWatching != null) {
+            val cw = continueWatching!!
+            item {
+                Text(
+                    "Continue Watching",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = TextWhite,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(start = 24.dp, top = 24.dp, bottom = 12.dp)
+                )
+
+                // The Card
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Slate900)
+                        .border(1.dp, Slate800, RoundedCornerShape(16.dp))
+                        .clickable {
+                            // Navigate to player with saved state
+                            navController.navigate(
+                                "player/${cw.anime.id.value}/${cw.history.episodeNumber}"
+                            )
+                        }
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Thumbnail
+                    Box(modifier = Modifier.size(width = 120.dp, height = 70.dp).clip(RoundedCornerShape(8.dp))) {
+                        AsyncImage(
+                            model = cw.anime.banner ?: cw.anime.posters?.large, // Try banner first for landscape look
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        // Play Overlay
+                        Box(
+                            modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Rounded.PlayArrow, null, tint = TextWhite, modifier = Modifier.size(24.dp))
+                        }
+
+                        // Progress Bar at bottom of image
+                        if (cw.history.duration > 0) {
+                            val progress = cw.history.position.toFloat() / cw.history.duration.toFloat()
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.BottomStart)
+                                    .fillMaxWidth()
+                                    .height(3.dp)
+                                    .background(Color.Gray.copy(alpha=0.5f))
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth(progress)
+                                        .fillMaxHeight()
+                                        .background(Purple500)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    Column {
+                        Text(
+                            text = cw.anime.title.english ?: cw.anime.title.primary ?: "Unknown",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = TextWhite,
+                            maxLines = 1
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Episode ${cw.history.episodeNumber}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Purple500,
+                            fontWeight = FontWeight.Medium
+                        )
+                        if (cw.history.position > 0) {
+                            val left = (cw.history.duration - cw.history.position) / 60000
+                            Text(
+                                text = "${left}m left",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = TextGrey
+                            )
                         }
                     }
                 }

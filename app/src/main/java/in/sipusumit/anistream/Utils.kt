@@ -29,7 +29,7 @@ fun formatTime(ms: Long): String {
 fun openIn1DM(
     context: Context,
     url: String,
-//    fileName: String,
+    fileName: String,
     headers: Map<String, String>
 ) {
     val intent = Intent(Intent.ACTION_VIEW)
@@ -44,7 +44,7 @@ fun openIn1DM(
 
 
 // Adding headers
-//    intent.putExtra("com.android.extra.filename", "custom_name.zip") // Optional
+    intent.putExtra("com.android.extra.filename", fileName) // Optional
     intent.putExtra("android.intent.extra.TEXT", url) // URL again
     intent.putExtra("headers", headers.entries.joinToString("\n") { "${it.key}: ${it.value}"})
 

@@ -1,9 +1,13 @@
 package `in`.sipusumit.anistream.ui.screens
 
 import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.view.WindowManager
+import androidx.activity.compose.BackHandler
 import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -95,15 +99,27 @@ import `in`.sipusumit.anistream.viewmodel.PlayerViewModel
 import kotlinx.coroutines.delay
 import kotlin.math.roundToLong
 import androidx.core.net.toUri
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import `in`.sipusumit.aniapi.network.UserAgents
 import `in`.sipusumit.anistream.openIn1DM
 
 private const val DOUBLE_TAP_SEEK_MS = 10_000L
+
+fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
+}
 
 // --- PLAYER SCREEN ---
 @Composable
 fun PlayerScreen(navController: NavController, viewModel: PlayerViewModel) {
     val context = LocalContext.current
     val view = LocalView.current
+    val activity = context.findActivity()
+    val window = activity?.window
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -111,8 +127,21 @@ fun PlayerScreen(navController: NavController, viewModel: PlayerViewModel) {
 
     // Fullscreen State
     var isFullscreen by rememberSaveable{ mutableStateOf(false) }
+
+    // Add this inside PlayerScreen, just before the layout
+    BackHandler(enabled = isFullscreen) {
+        isFullscreen = false
+    }
+
+    DisposableEffect(Unit) {
+        window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        onDispose {
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
+
     DisposableEffect(isFullscreen) {
-        val window = (context as? Activity)?.window
+
         if (window != null) {
             val insetsController = WindowCompat.getInsetsController(window, view)
             if (isFullscreen) {
@@ -120,12 +149,12 @@ fun PlayerScreen(navController: NavController, viewModel: PlayerViewModel) {
                 insetsController.hide(WindowInsetsCompat.Type.systemBars())
                 insetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                 // Force landscape
-                context.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
             } else {
                 // Show system bars
                 insetsController.show(WindowInsetsCompat.Type.systemBars())
                 // Reset orientation
-                context.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
             }
         }
 
@@ -140,7 +169,7 @@ fun PlayerScreen(navController: NavController, viewModel: PlayerViewModel) {
     }
 
     LaunchedEffect(Unit) {
-        viewModel.downloadUrl.collect { url ->
+        viewModel.downloadUrl.collect { (fileName, url) ->
 //            val intent = Intent(Intent.ACTION_VIEW).apply {
 //                data = url.toUri()
 //                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -149,10 +178,10 @@ fun PlayerScreen(navController: NavController, viewModel: PlayerViewModel) {
             openIn1DM(
                 context = context,
                 url = url,
-//                fileName = "One_Piece_Ep_${episode.number}.mp4",
+                fileName = fileName,
                 headers = mapOf(
                     "Referer" to "https://allanime.day/",
-                    "User-Agent" to "Mozilla/5.0"
+                    "User-Agent" to UserAgents.DEFAULT
                 )
             )
         }
@@ -348,10 +377,39 @@ private fun rememberControlsVisibility(
 fun VideoPlayerContent(stream: Stream, current: EpisodeNumber, isFullscreen: Boolean, onBack: () -> Unit, onToggleFullscreen: () -> Unit, viewModel: PlayerViewModel) {
     var player by remember { mutableStateOf<ExoPlayer?>(null) }
     var isPlaying by remember { mutableStateOf(false) }
+    var wasPlaying by remember { mutableStateOf(true) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_START -> {
+                    if(wasPlaying) player?.play()
+                }
+                Lifecycle.Event.ON_STOP -> {
+                    wasPlaying = isPlaying
+                    player?.pause()
+                }
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    // You need access to the startPosition from the state
+    val startPosition = (viewModel.uiState.value as? PlayerUiState.Ready)?.startPosition ?: 0L
 
     Box(modifier = Modifier.fillMaxSize()){
         VideoPlayer(stream.url, emptyMap()) { exoPlayer ->
             player = exoPlayer
+
+            if(startPosition > 0 && exoPlayer.currentPosition == 0L){
+                exoPlayer.seekTo(startPosition)
+            }
         }
         // listen to playback changes
         DisposableEffect(player) {
@@ -393,7 +451,7 @@ fun VideoPlayerContent(stream: Stream, current: EpisodeNumber, isFullscreen: Boo
 //                ) {
 //                    onUserInteraction()
 //                }
-                .pointerInput(player){
+                .pointerInput(player) {
                     detectTapGestures(
                         onTap = {
                             onUserInteraction()
@@ -431,12 +489,19 @@ fun VideoPlayerContent(stream: Stream, current: EpisodeNumber, isFullscreen: Boo
             if (duration > 0) bufferedPosition.toFloat() / duration else 0f
 
         LaunchedEffect(player) {
+            var lastSaveTime = 0L
             while (true) {
                 player?.let {
                     currentPosition = it.currentPosition
                     bufferedPosition = it.bufferedPosition
                     duration = it.duration.coerceAtLeast(0L)
-                    isBuffering = it.isLoading
+                    isBuffering = it.playbackState == Player.STATE_BUFFERING
+
+                    val currentTime = System.currentTimeMillis()
+                    if (it.isPlaying && (currentTime - lastSaveTime > 5000)) {
+                        viewModel.onProgressChange(it.currentPosition, it.duration)
+                        lastSaveTime = currentTime
+                    }
                 }
                 delay(500) // smooth but battery-friendly
             }
@@ -485,7 +550,7 @@ fun VideoPlayerContent(stream: Stream, current: EpisodeNumber, isFullscreen: Boo
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        if(isBuffering && !isPlaying){
+                        if(isBuffering){
                             CircularProgressIndicator(color = Purple500)
                         }else {
                             Icon(
@@ -566,7 +631,7 @@ fun VideoPlayerContent(stream: Stream, current: EpisodeNumber, isFullscreen: Boo
                             horizontalArrangement = Arrangement.End
                         ) {
 
-                            // Skip Intro
+                            //TODO: Skip Intro
                             Button(
                                 onClick = {},
                                 colors = ButtonDefaults.buttonColors(

@@ -1,6 +1,10 @@
 package `in`.sipusumit.anistream
 
 import android.util.Log
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -80,7 +84,8 @@ fun AnimeApp() {
 
     val context = LocalContext.current
     val app = context.applicationContext as AniStreamApp
-    val homeScreenViewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory(app.animeSource))
+    val homeScreenViewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory(app.animeSource, app.db.historyDao()))
+
     Row(modifier = Modifier.fillMaxSize().background(Slate950)) {
 
         // Desktop/Tablet Sidebar (Visible only on wide screens and NOT in player)
@@ -177,7 +182,34 @@ fun AnimeApp() {
             NavHost(
                 navController = navController,
                 startDestination = "home", // TODO: home
-                modifier = Modifier.padding(innerPadding)
+                modifier = Modifier.padding(innerPadding),
+                enterTransition = {
+                    slideIntoContainer(
+                        towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                        animationSpec = tween(300)
+                    ) + fadeIn(animationSpec = tween(300))
+                },
+                exitTransition = {
+                    slideOutOfContainer(
+                        towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                        animationSpec = tween(300)
+                    ) + fadeOut(animationSpec = tween(300))
+                },
+                // 3. POP (Back): Previous screen slides in from the Left
+                popEnterTransition = {
+                    slideIntoContainer(
+                        towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                        animationSpec = tween(300)
+                    ) + fadeIn(animationSpec = tween(300))
+                },
+
+                // 4. POP (Back): Current screen slides out to the Right
+                popExitTransition = {
+                    slideOutOfContainer(
+                        towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                        animationSpec = tween(300)
+                    ) + fadeOut(animationSpec = tween(300))
+                }
             ) {
                 composable("home") { HomeScreen(navController, homeScreenViewModel) }
                 composable("search?query={query}") { backStackEntry ->
@@ -214,7 +246,8 @@ fun AnimeApp() {
                         factory = PlayerViewModelFactory(
                             source = app.animeSource,
                             animeId = AnimeId(animeId),
-                            episode = EpisodeNumber(episode)
+                            episode = EpisodeNumber(episode),
+                            historyDao = app.db.historyDao()
                         )
                     )
 

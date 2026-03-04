@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -58,6 +59,11 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     // Required for AsyncImage (Image loading)
     implementation("io.coil-kt:coil-compose:2.6.0")
+
+    val room_version = "2.6.1"
+    implementation("androidx.room:room-runtime:$room_version")
+    implementation("androidx.room:room-ktx:$room_version")
+    ksp("androidx.room:room-compiler:$room_version") // Ensure you have the KSP plugin applied
 
     // Required for Icons.Rounded.Cast, etc.
     implementation("androidx.compose.material:material-icons-extended:1.6.0")
